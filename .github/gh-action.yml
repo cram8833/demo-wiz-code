@@ -1,112 +1,44 @@
-name: Build and Push Docker Image
+name: Build and Push to Azure ACR
 
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  id-token: write
-  contents: read
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-    env:
-      WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
-      WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
+    
     steps:
+      # 1. Checkout du code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # 2. Connexion à Azure via un Service Principal
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          node-version: '18'
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Gulp build
-        run: npm run build
-
-      - name: Build and push latest Docker image
-        env:
-          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          cd dist
-          IMAGE_TAG=$REGISTRY/$REPOSITORY:${COMMIT_SHA}
-          echo "Building Docker image with tag $IMAGE_TAG"
-          docker build -t $IMAGE_TAG .
-
-      - name: Download Wiz CLI
-        run: curl -o wizcli https://wizcli.app.wiz.io/latest/wizcli && chmod +x wizcli
-
-      - name: Authenticate to Wiz
-        run: ./wizcli auth
-
-      - name: Run Wiz CLI image scan
-        id: scan
-        run: ./wizcli docker scan -i $REGISTRY/$REPOSITORY:${COMMIT_SHA} --policy ${ODLUSER}-vuln-block
-        continue-on-error: false
-        env:
-          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-          ODLUSER: ${{ secrets.ODLUSER }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      # 3. Connexion spécifique à l'ACR
+      - name: Login to ACR
+        uses: azure/docker-login@v1
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/my-github-actions-role
-          aws-region: us-east-1
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      # 4. Build et Push de l'image
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
         with:
-          registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-
-      - name: Push the tagged Docker image to Amazon ECR
-        env:
-          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          cd dist
-          IMAGE_TAG=$REGISTRY/$REPOSITORY:${COMMIT_SHA}
-          docker push $IMAGE_TAG
-
-      - name: Verify Docker image
-        env:
-          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          REPOSITORY_URI=$REGISTRY/$REPOSITORY
-          IMAGE_TAG=$REPOSITORY_URI:${COMMIT_SHA}
-          echo "Pulling Docker image with URI: $IMAGE_TAG"
-          docker pull $IMAGE_TAG
-
-      - name: Trigger AWS App Runner
-        env:
-          AWS_REGION: "us-east-1"
-          SERVICE_ARN: ${{ secrets.APP_RUNNER_SERVICE_ARN }}
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-        run: |
-          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPOSITORY:$COMMIT_SHA
-          aws apprunner update-service --service-arn $SERVICE_ARN --source-configuration "ImageRepository={ImageIdentifier=\"$IMAGE_URI\",ImageRepositoryType=\"ECR\"}"
-
-      - name: Run Wiz CLI image tag
-        env:
-          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: "us-east-1"
-          REPOSITORY: "prime-website"
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$REPOSITORY:$COMMIT_SHA
-          ./wizcli docker tag -i $IMAGE_URI
+          context: .
+          push: true
+          # On utilise le tag 'latest' et le SHA du commit pour garder une trace
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/sagesse-dev:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/sagesse-dev:${{ github.sha }}
+          # Utilisation du cache pour accélérer les builds futurs
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
