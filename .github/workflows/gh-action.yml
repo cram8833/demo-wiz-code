@@ -1,4 +1,4 @@
-name: Build and Push to Azure ACR
+name: Build Image
 
 on:
   push:
@@ -19,7 +19,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Connexion Azure OIDC
+      # 2. Build image Docker
+      - name: Build Docker image
+        run: cd . && docker build . -t sagesse-dev:${{ github.sha }}
+
+      # 3. Wiz Cli image scan
+      - name: Download Wiz CLI
+        run: curl -o wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64 && chmod +x wizcli
+
+      - name: Run wiz-cli docker image scan
+        run: ./wizcli scan container-image sagesse-dev:${{ github.sha }} --policies "Marc vulnerabilities policy" "Marc secrets policy" "Marc host configuration policy"
+
+      - name: Fetch digest of Docker image for Graph enrichment
+        env:
+          WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
+          WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
+        run: ./wizcli tag $TAG
+        
+      # 4. Connexion Azure OIDC
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -27,18 +44,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 4. Connexion ACR
+      # 5. Connexion ACR & push
       - name: Login to ACR
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
-
-      # 3. Build et Push de l'image
-      - name: Build and Push Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          # On utilise le tag 'latest' et le SHA du commit pour garder une trace
-          tags: |
-            ${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:latest
-            ${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:${{ github.sha }}
+          
+          IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:latest
+          docker tag sagesse-dev $IMAGE_NAME
+          
+          docker push $IMAGE_NAME         
