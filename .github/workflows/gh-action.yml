@@ -42,10 +42,10 @@ jobs:
       - name: Login to ACR
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
-          
-          docker push ${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:${{ github.sha }}
 
-          IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:latest
-          docker tag sagesse-dev:${{ github.sha }} $IMAGE_NAME
-          
-          docker push $IMAGE_NAME
+          IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev
+          docker tag sagesse-dev:${{ github.sha }} $IMAGE_NAME:latest
+          docker tag sagesse-dev:${{ github.sha }} $IMAGE_NAME:${{ github.sha }}
+
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:${{ github.sha }}
