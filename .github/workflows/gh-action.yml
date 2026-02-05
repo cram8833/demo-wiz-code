@@ -44,6 +44,6 @@ jobs:
           az acr login --name ${{ secrets.ACR_NAME }}
           
           IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:latest
-          docker tag $IMAGE_NAME
+          docker tag sagesse-dev:${{ github.sha }} $IMAGE_NAME
           
-          docker push $IMAGE_NAME
+          docker push --all-tags $IMAGE_NAME
