@@ -34,7 +34,7 @@ jobs:
         env:
           WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
           WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
-        run: ./wizcli tag ${{ github.sha }}
+        run: ./wizcli tag sagesse-dev:${{ github.sha }}
         
       # 4. Connexion Azure OIDC
       - name: Azure login
