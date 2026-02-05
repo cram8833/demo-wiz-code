@@ -29,12 +29,6 @@ jobs:
 
       - name: Run wiz-cli docker image scan
         run: ./wizcli scan container-image sagesse-dev:${{ github.sha }} --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
-
-      - name: Fetch digest of Docker image for Graph enrichment
-        env:
-          WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
-          WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
-        run: ./wizcli tag sagesse-dev:${{ github.sha }}
         
       # 4. Connexion Azure OIDC
       - name: Azure login
