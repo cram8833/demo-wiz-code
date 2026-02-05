@@ -46,4 +46,4 @@ jobs:
           IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:latest
           docker tag sagesse-dev:${{ github.sha }} $IMAGE_NAME
           
-          docker push --all-tags $IMAGE_NAME
+          docker push --all-tags ${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev
