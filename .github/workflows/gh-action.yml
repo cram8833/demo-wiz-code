@@ -33,6 +33,3 @@ jobs:
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/sagesse-dev:latest
             ${{ secrets.ACR_LOGIN_SERVER }}/sagesse-dev:${{ github.sha }}
-          # Utilisation du cache pour accélérer les builds futurs
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
