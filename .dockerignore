@@ -26,3 +26,5 @@ Dockerfile*
 docker-compose*
 README.md
 structure.md
+
+aws_creds.txt
