@@ -34,7 +34,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'sagesse-dev-cram8833'
-          images: '${{ secrets.ACR_NAME }}.azurecr.io/mon-app:${{ env.DEPLOY_TAG }}'
+          images: '${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:${{ env.DEPLOY_TAG }}'
 
       # 4. Vérification du Health Check (Optionnel via CLI)
       - name: Verify Deployment
