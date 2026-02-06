@@ -73,5 +73,5 @@ jobs:
       - name: Verify Deployment
         run: |
           echo "Vérification du démarrage de l'application..."
-          sleep 30
+          sleep 60
           curl -f http://sagesse-dev-cram8833.azurewebsites.net/ || exit 1
