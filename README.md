@@ -18,8 +18,8 @@ http://localhost:3000
 And to test built version in a container locally
 
 ```bash
-docker build -t app-demo-wiz-code .
-docker run -p 3000:3000 app-demo-wiz-code
+docker build -t sagesse-dev .
+docker run -p 3000:3000 sagesse-dev
 ```
 
 View in browser:
