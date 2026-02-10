@@ -13,7 +13,6 @@ const quotes = [
 app.get('/', (req, res) => {
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
   
-  // Petit HTML sympa directement dans le code
   res.send(`
     <html>
       <head>

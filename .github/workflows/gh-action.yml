@@ -69,7 +69,7 @@ jobs:
           app-name: 'sagesse-dev-cram8833'
           images: '${{ secrets.ACR_NAME }}.azurecr.io/sagesse-dev:${{ github.sha }}'
 
-      # 3. Vérification du Health Check (Optionnel via CLI)
+      # 3. Vérification du Health Check
       - name: Verify Deployment
         run: |
           echo "Vérification du démarrage de l'application..."
