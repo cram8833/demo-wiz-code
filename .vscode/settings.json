@@ -20,5 +20,5 @@
     "wiz.buildPolicies.vulnerabilities": [
         "Marc vulnerabilities policy"
     ],
-//    "wiz.showOnlyPolicyMatches": true
+    "wiz.showOnlyPolicyMatches": true
 }
