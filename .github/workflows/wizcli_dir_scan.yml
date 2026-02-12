@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  wizcli-image-scan:
+  wizcli-dir-scan:
     runs-on: ubuntu-latest
     
     steps:
