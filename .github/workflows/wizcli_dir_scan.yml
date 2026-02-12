@@ -1,0 +1,21 @@
+name: WizCLI Dir Scan
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout du code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. WizCli Dir Scan
+      - name: Download Wiz CLI
+        run: curl -o wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64 && chmod +x wizcli
+
+      - name: Run wiz-cli dir scan
+        run: ./wizcli scan dir . --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
