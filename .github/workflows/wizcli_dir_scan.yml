@@ -1,8 +1,12 @@
 name: WizCLI Dir Scan
 
+permissions:
+  pull-requests: write
+
 on:
+  push:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "wizcli-demo" ]
 
 jobs:
   wizcli-dir-scan:
@@ -18,4 +22,21 @@ jobs:
         run: curl -o wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64 && chmod +x wizcli
 
       - name: Run wiz-cli dir scan
-        run: ./wizcli scan dir . --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
+        run: ./wizcli scan dir . --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }} --human-file-output=output.md
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = ${{ github.event.workflow_run.head_branch }};
+            const workflowName = '${{ github.workflow }}';
+            const runUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const body = `**${workflowName} failed** ❌\n\nCheck details: [View Run](${runUrl})`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
