@@ -1,7 +1,6 @@
 name: WizCLI Docker Image Scan
 
 on:
-  push:
   pull_request:
     branches: [ "main" ]
 

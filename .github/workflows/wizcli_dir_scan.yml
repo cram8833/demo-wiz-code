@@ -1,7 +1,6 @@
 name: WizCLI Dir Scan
 
 on:
-  push:
   pull_request:
     branches: [ "main" ]
 
