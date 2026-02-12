@@ -1,0 +1,33 @@
+name: WizCLI scan
+
+on:
+  pull_request:
+    branches:
+      - branch-wiz-cli
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout du code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Build image Docker
+      - name: Build Docker image
+        run: cd . && docker build . -t app1:${{ github.sha }}
+
+      # 3. Wiz Cli image & dir scan
+      - name: Download Wiz CLI
+        run: curl -o wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64 && chmod +x wizcli
+
+      - name: Run wiz-cli dir scan
+        run: ./wizcli scan dir . --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
+
+      - name: Run wiz-cli docker image scan
+        run: ./wizcli scan container-image app1:${{ github.sha }} --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
