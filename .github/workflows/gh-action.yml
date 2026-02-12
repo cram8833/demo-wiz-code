@@ -21,7 +21,14 @@ jobs:
       - name: Build Docker image
         run: cd . && docker build . -t sagesse-dev:${{ github.sha }}
        
-      # 3. Connexion Azure OIDC
+      # 3. Wiz Cli image & dir scan
+      - name: Download Wiz CLI
+        run: curl -o wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64 && chmod +x wizcli
+
+      - name: Run wiz-cli docker image scan
+        run: ./wizcli scan container-image sagesse-dev:${{ github.sha }} --policies "Marc vulnerabilities policy","Marc secrets policy" --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
+    
+      # 4. Connexion Azure OIDC
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -29,7 +36,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 4. Connexion ACR & push
+      # 5. Connexion ACR & push
       - name: Login to ACR
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
